@@ -1,6 +1,6 @@
 #include "headers/initProc.h"
 
-// Initialize a process's page table
+/* Function that initializes a U-proc's page table */
 void initPageTableEntry(pteEntry_t *entry, int asid, int i) {
   if (i < 31)
     entry->pte_entryHI = KUSEG + (i << VPNSHIFT) + (asid << ASIDSHIFT);
@@ -9,16 +9,18 @@ void initPageTableEntry(pteEntry_t *entry, int asid, int i) {
   entry->pte_entryLO = DIRTYON;
 }
 
-// Initial Processor State for a U-proc
+/* Function that initializes the Processor State for a U-proc */
 void initProcessState(state_t *processState, int index){
-    processState->pc_epc = UPROCSTARTADDR;
-    processState->reg_sp = USERSTACKTOP;
+    processState->pc_epc = UPROCSTARTADDR; // PC set to 0x8000.00B0; the address of the start of the .text section
+    processState->reg_sp = USERSTACKTOP; //  SP set to 0xC000.0000
+    // Status set for user-mode with all interrupts and the processor Local Timer enabled.
     processState->mie = MIE_ALL;
     processState->status = MSTATUS_MPIE_MASK | MSTATUS_MPP_U;
+    //  EntryHi.ASID set to the process’s unique ID; an integer from [1..8]:
     processState->entry_hi = index << ASIDSHIFT; // lo sposti dove l'hardware si aspetta di trovarlo
 }
 
-// Initialization of a Support Structure for a U-proc
+/* Function that initializes a Support Structure for a U-proc */
 void initSupportStructures(support_t *supportStructure, int index){
     /* Set the process's ASID */
     supportStructure->sup_asid = index;
@@ -36,23 +38,29 @@ void initSupportStructures(support_t *supportStructure, int index){
 }
 
 void InstantiatorProcess (){
-    // Init swap pool
+    // Initialize swap pool table
     for(int i = 0; i < POOLSIZE; i++){
         SWAP_POOL[i].sw_asid = NOPROC;
     }
 
-    // Init swap pool semaphore
+    // Initialize swap pool table semaphore
     SWAP_POOL_SEMAPHORE = 1;
-    // Init masterSemaphore
+
+    // Initialize masterSemaphore
     MASTER_SEMAPHORE = 0;
 
     for(int i = 0; i < 3*UPROCMAX; i++){
         U_DEVICE_SEMAPHORES[i] = 1;
     }
 
-    // array di stati per gli 8 u procs
+    /* Initializing U-procs: to launch a U-proc, one simply sets up the parameters for a NSYS1, 
+    followed by the actual execution of the NSYS1 Nucleus service. The NSYS1 Nucles service takes
+    two parameters: the inital processor state for the U-proc and a pointer to an initalized 
+    Support Structure for the U-prc */
+
+    // array of state_t
     state_t UprocState[UPROCMAX];
-    // array di support struct per gli 8 u procs
+    // array of support_t 
     support_t supportStructures[UPROCMAX];
 
     for(int i = 1; i <= UPROCMAX; i++){
