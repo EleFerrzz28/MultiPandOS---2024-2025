@@ -19,7 +19,7 @@ void PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT(state_t *saved_exception_state){
 treats the exception as a NSYS2 (terminate) or “passes up” the handling of the exception 
 if the offending process was provided a non-NULL value for its Support Structure pointer when it was created*/
 void SYSCALL_EXCEPTION_HANDLER(state_t *saved_exception_state){
-
+    
 }
 
 /* General exception handler*/
