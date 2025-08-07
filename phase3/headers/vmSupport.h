@@ -13,9 +13,6 @@
 /*Swap Mutex Process*/
 extern unsigned int SWAP_POOL_SEMAPHORE; // when accessing the swap pool -> MUTEX
 
-/*Page Table*/
-extern pteEntry_t PAGE_TABLE[32];
-
 /*Swap Pool Structure*/
 extern swap_t SWAP_POOL[POOLSIZE];
 
