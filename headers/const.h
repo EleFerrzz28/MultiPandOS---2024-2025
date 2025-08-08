@@ -131,6 +131,7 @@
 #define TERMINATE 2
 #define WRITEPRINTER 3
 #define WRITETERMINAL 4
+#define READTERMINAL 5
 
 /* Index register constants */
 #define PRESENTFLAG 0x80000000

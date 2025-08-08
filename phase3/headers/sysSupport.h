@@ -5,6 +5,7 @@
 #include <uriscv/liburiscv.h>
 #include <uriscv/types.h>
 #include <stddef.h>
+#include "vmSupport.h"
 
 void support_exception_handler();
 void SYSCALL_EXCEPTION_HANDLER(state_t *saved_exception_state);

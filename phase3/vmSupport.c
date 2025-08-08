@@ -33,11 +33,31 @@ void clean_page(pteEntry_t* page_table_entry){
     update_tlb(*page_table_entry);
 }
 
-void rw_backing_store(int asid, int page_no){
+// if (rw == 0) -> read
+// else -> write/update
+void rw_backing_store(int asid, int page_no, memaddr frame_addr, int rw){
+    // Trova il device flash per questo u-proc
     dtpreg_t *flash_device_reg = (dtpreg_t *)DEV_REG_ADDR(IL_FLASH, asid - 1);
-    flash_device_reg->data0 = (memaddr*)page_no;
-    //SEZIONE 9.c + 10 del pager
+    // Calcola il numero di blocco
+    int block_number = page_no;
+    // Imposta indirizzo fisico del frame da leggere/scrivere
+    flash_device_reg->data0 = frame_addr;
+   
+    if (rw == 1){
+        flash_device_reg->command = (block_number << 8) | FLASHWRITE;
+    } else {
+        flash_device_reg->command = (block_number << 8) | FLASHREAD;
+    }
+    // Avvia operazione
+    SYSCALL(DOIO, (int)flash_device_reg, (int)flash_device_reg->command, 0);
+
+    // Controlla esito
+    if(flash_device_reg->status != 1){
+        // Program trap
+        SYSCALL(TERMINATE, 0, 0, 0); 
+    }
 }
+
 
 void uTLB_RefillHandler(){
     //Determine the page number(p) of the missing TLB entry
@@ -75,7 +95,7 @@ void pager(){
 
     pteEntry_t page_table_entry = curr_proc_sup_structure->sup_privatePgTbl[p];
 
-    if(SWAP_POOL[p].sw_asid!=NOPROC){//Check if the page is loaded in the swap pool
+    if(SWAP_POOL[p].sw_asid!=NOPROC){// Check if the page is loaded in the swap pool
         update_tlb(page_table_entry);
         if(page_table_entry.pte_entryLO & VALIDON){
             SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0);
@@ -85,10 +105,18 @@ void pager(){
 
     //Pick a frame, i, from the Swap Pool.
     int i = get_victim_frame();
+    // calcolo l'indirizzo della pagina tenendo conto dell'offset SWAP_POOL_AREA
+    // e ogni singola pagina fino alla i-esima
+    int SWAP_POOL_START = RAMSTART + (64 * PAGESIZE) + (NCPU * PAGESIZE);
+    memaddr victim_addr = (memaddr)SWAP_POOL_START + (i * PAGESIZE);
+
     if (SWAP_POOL[i].sw_asid != NOPROC){
         clean_page(SWAP_POOL[i].sw_pte);
-        rw_backing_store(SWAP_POOL[i].sw_asid, SWAP_POOL[i].sw_pageNo);
+        rw_backing_store(SWAP_POOL[i].sw_asid, SWAP_POOL[i].sw_pageNo, victim_addr, 1); // il parametro 1 indica che vogliamo effettuare una scrittura
     }
+
+    // Read the contents of the Current Process’s backing store/flash device logical page p into frame i 
+    rw_backing_store(CURRENT_PROC[getPRID()]->p_pid, p, victim_addr, 0); // il parametro 0 indica che vogliamo effettuare una lettura
 
     //Update the Swap Pool table’s entry i to reflect frame i’s new contents
     SWAP_POOL[i].sw_asid = CURRENT_PROC[getPRID()]->p_pid;
@@ -96,14 +124,9 @@ void pager(){
     //Update the Current Process’s Page Table entry for page p to indicate it is now present (V bit)
     CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p].pte_entryLO |= VALIDON;
     //DA RIGUARDARE SOTTO
-    // calcolo l'indirizzo della pagina tenendo conto dell'offset SWAP_POOL_AREA
-    // e ogni singola pagina fino alla i-esima
-    int SWAP_POOL_START = RAMSTART + (64 * PAGESIZE) + (NCPU * PAGESIZE);
-    memaddr victim_addr = (memaddr)SWAP_POOL_START + (i * PAGESIZE);
-    CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p].pte_entryLO |= (victim_addr);
-    // Uso il mio algoritmo di rimpiazzamento per trovare la pagina da
-    // sostituire
-    int i = getPage(); // pagina vittima
+    
+    // Update the Current Process’s Page Table entry for page p to indicate it is occupying frame i (PFN field).
+    CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p].pte_entryLO |= (victim_addr << ENTRYLO_PFN_BIT);
 
     //Update the TLB
     update_tlb(CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p]);
