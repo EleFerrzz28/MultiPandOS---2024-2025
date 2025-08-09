@@ -8,7 +8,7 @@
 #include "vmSupport.h"
 
 void support_exception_handler();
-void SYSCALL_EXCEPTION_HANDLER(state_t *saved_exception_state);
+void PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT(state_t *saved_exception_state);
 void SYSCALL_EXCEPTION_HANDLER(state_t *saved_exception_state);
 
 #endif
