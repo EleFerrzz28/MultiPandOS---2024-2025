@@ -25,6 +25,8 @@ extern swap_t SWAP_POOL[POOLSIZE];
 extern unsigned int MASTER_SEMAPHORE;
 
 /*Array of semaphores for the u-proc's devices*/
-extern volatile unsigned int U_DEVICE_SEMAPHORES[3*UPROCMAX];
+extern volatile unsigned int U_DEVICE_SEMAPHORES[4*UPROCMAX];
 
+/* A pointer to the current holder of mutual exclusion* on the Swap Pool Semaphore */
+extern pcb_t *swap_holder;
 #endif

@@ -5,7 +5,8 @@
 unsigned int SWAP_POOL_SEMAPHORE;
 unsigned int MASTER_SEMAPHORE;
 swap_t SWAP_POOL[POOLSIZE];
-volatile unsigned int U_DEVICE_SEMAPHORES[3*UPROCMAX];
+volatile unsigned int U_DEVICE_SEMAPHORES[4*UPROCMAX];
+pcb_t *swap_holder;
 
 /* Function that given a page table entry updates - if needed! - the TLB. This is done
 by probing the TLB (TLBP) to see if the newly updated TLB entry is indeed cached in the TLB. If
@@ -118,6 +119,8 @@ void pager(){
 
     // Gain mutual exclusion over the Swap Pool table
     SYSCALL(PASSEREN, (int)&SWAP_POOL_SEMAPHORE, 0, 0);
+    // Current Process is now holding mutual exclusion on the Swap Pool Table
+    swap_holder = CURRENT_PROC[getPRID()];
 
     // Determine the missing page number (denoted as p)
     int p = ENTRYHI_GET_VPN(saved_exception_state->entry_hi);
@@ -129,6 +132,8 @@ void pager(){
         update_tlb(page_table_entry); // Update the TLB
         if(page_table_entry.pte_entryLO & VALIDON){ // if the page is valid...
             SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0); // ...release mutual exclusion
+            // There's now no process holding mutual exclusion on the Swap Pool Table
+            swap_holder = NULL;
             LDST(&saved_exception_state); // and return control to the Current Process 
         }
     }
@@ -165,6 +170,8 @@ void pager(){
 
     // Release mutual exclusion over the Swap Pool table
     SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0);
+    // There's now no process holding mutual exclusion on the Swap Pool Table
+    swap_holder = NULL;
     // Return control to the Current Process to retry the instruction that caused the page fault
     LDST(&saved_exception_state);
 }
