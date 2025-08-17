@@ -130,7 +130,7 @@ void print(char *msg) {
 
 /* TLB-Refill Handler */
 /* One can place debug calls here, but not calls to print */
-void uTLB_RefillHandler() {
+void uTLB_RefillHandlerr() {
 
     int prid = getPRID();
     setENTRYHI(0x80000000);

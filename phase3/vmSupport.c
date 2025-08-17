@@ -1,5 +1,5 @@
-#include "vmSupport.h"
-#include "sysSupport.h"
+#include "headers/vmSupport.h"
+#include "headers/sysSupport.h"
 
 /*Declaring the structures - module wide*/
 unsigned int SWAP_POOL_SEMAPHORE;
@@ -7,6 +7,26 @@ unsigned int MASTER_SEMAPHORE;
 swap_t SWAP_POOL[POOLSIZE];
 volatile unsigned int U_DEVICE_SEMAPHORES[4*UPROCMAX];
 pcb_t *swap_holder;
+
+dtpreg_t *getDevReg(int devType, int asid){
+    dtpreg_t* dev_reg = START_DEVREG;
+
+    switch(devType){
+        case IL_FLASH:
+            dev_reg += (asid-1)*0x10;
+            break;
+        case IL_PRINTER:
+            dev_reg += (0x10 + (asid-1)*0x10);
+            break;
+        case IL_TERMINAL:
+            dev_reg += (2*0x10 + (asid-1)*0x10);
+            break;
+        default:
+            PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT();
+            break;
+    }
+    return dev_reg;
+}
 
 /* Function that given a page table entry updates - if needed! - the TLB. This is done
 by probing the TLB (TLBP) to see if the newly updated TLB entry is indeed cached in the TLB. If
@@ -50,7 +70,7 @@ the number of the page to be read (or written) and its address, and a 4th parame
 indicates wether the page to distinguish reading or writing operations*/
 void rw_backing_store(int asid, int page_no, memaddr frame_addr, int rw){
     // Find ASID's Flash Device
-    dtpreg_t *flash_device_reg = (dtpreg_t *)DEV_REG_ADDR(IL_FLASH, asid - 1);
+    dtpreg_t *flash_device_reg = getDevReg(IL_FLASH, asid);
     // Compute the block number --> possiamo omettere questa istruzione??
     int block_number = page_no;
     // Write the flash device’s DATA0 field with the appropriate starting physical address of the 4k

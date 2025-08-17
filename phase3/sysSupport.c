@@ -5,6 +5,22 @@
 • SYSCALL exception handler 
 • Program Trap exception handler */
 
+/* Program Trap exception handler: for all Program Trap exceptions, the nucleus either treats 
+the exception as a process termination or “passes up” the handling of the exception if the 
+offending process was provided a non-NULL value for its Support Structure pointer when it was created. 
+The Support Level’s Program Trap exception handler is to terminate the process in an orderly
+fashion. */
+void PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT(){
+    // Check if the process to be terminated is currently holding mutual exclusion 
+    // on the Swap Pool Table
+    if(CURRENT_PROC[getPRID()] == swap_holder){
+        // if so, mutual exclusion is released 
+        SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0);
+        // There's now no process holding mutual exclusion on the Swap Pool Table
+        swap_holder = NULL;
+    }
+    SYSCALL(TERMPROCESS, 0, 0, 0);
+}
 
 /* Function that, given a pointer to the values in a1 and a2 registers, checks wether they are correct.
 Infact, it is an error to write to a printer device from an address outside of the requesting U-proc’s logical
@@ -32,7 +48,7 @@ N.B.: in order to correctly handle terminal devices, the value in the 4th parame
 Eventually, the first parameter is a pointer to dev_reg_addr*/
 int getDevice(dtpreg_t *dev_reg_addr, int pid, int devType, int rw){
     // Device address
-    dev_reg_addr = (dtpreg_t*)DEV_REG_ADDR(devType, pid);
+    dev_reg_addr = getDevReg(devType, pid);
 
     int dev_index;
     // device index
@@ -56,24 +72,6 @@ int getDevice(dtpreg_t *dev_reg_addr, int pid, int devType, int rw){
     }
     return dev_index;
 }
-
-/* Program Trap exception handler: for all Program Trap exceptions, the nucleus either treats 
-the exception as a process termination or “passes up” the handling of the exception if the 
-offending process was provided a non-NULL value for its Support Structure pointer when it was created. 
-The Support Level’s Program Trap exception handler is to terminate the process in an orderly
-fashion. */
-void PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT(){
-    // Check if the process to be terminated is currently holding mutual exclusion 
-    // on the Swap Pool Table
-    if(CURRENT_PROC[getPRID()] == swap_holder){
-        // if so, mutual exclusion is released 
-        SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0);
-        // There's now no process holding mutual exclusion on the Swap Pool Table
-        swap_holder = NULL;
-    }
-    SYSCALL(TERMPROCESS, 0, 0, 0);
-}
-
 
 /* Syscall Terminate: this service causes the executing U-proc to cease to exist. The SYS2 service is essentially a user-mode
 “wrapper” for the kernel-mode restricted NSYS2 service. */
@@ -228,7 +226,7 @@ void ReadTerminal(state_t *saved_exception_state){
 (those having negative identifiers). For all other SYSCALL exceptions the nucleus either 
 treats the exception as a NSYS2 (terminate) or “passes up” the handling of the exception 
 if the offending process was provided a non-NULL value for its Support Structure pointer when it was created */
-void SYSCALL_EXCEPTION_HANDLER(state_t *saved_exception_state){
+void SYSCALL_EXCEPTION_HANDLER_SUPPORT(state_t *saved_exception_state){
     /* save off a pointer to the a0 register: it will be used to
     perform the correct SYSCALL depending on the relative constant
     contained in a0 */
@@ -266,6 +264,6 @@ void support_exception_handler(){
     if(CAUSE >= 0 && CAUSE < 24 && CAUSE != 8 && CAUSE != 11){        
         PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT(saved_exception_state);
     } else {
-        SYSCALL_EXCEPTION_HANDLER(saved_exception_state);
+        SYSCALL_EXCEPTION_HANDLER_SUPPORT(saved_exception_state);
     }
 }
