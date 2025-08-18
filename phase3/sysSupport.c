@@ -31,7 +31,7 @@ void checkError(int *a2, char *a1){
         SYSCALL(TERMINATE, 0, 0, 0);
         
     // Compute the last address occupied by the string
-    char *check_address = *a1 + 0x8*(*a2);
+    char *check_address = (char *) *a1 + 0x8*(*a2);
 
     if((*check_address > 0x8001E000 && *check_address < 0xBFFFF000) || *check_address > USERSTACKTOP) 
         SYSCALL(TERMINATE, 0, 0, 0);
@@ -84,11 +84,11 @@ void Terminate (state_t *saved_exception_state){
 /* Syscall WritePrinter: this service causes the requesting U-proc to be suspended until a line of output
 (string of characters) has been transmitted to the printer device associated with the U-proc.*/
 void WritePrinter(state_t *saved_exception_state){
-    char *a1 = &saved_exception_state->reg_a1;
-    int *a2 = &saved_exception_state->reg_a2;
+    char *a1 = (char *) &saved_exception_state->reg_a1;
+    int *a2 =  &saved_exception_state->reg_a2;
 
     // Check if the parameters a1 and a2 are "legal"
-    checkError(*a2,*a1);
+    checkError(a2,a1);
 
     // Save off the length of the string
     int i = *a2;
@@ -131,11 +131,11 @@ void WritePrinter(state_t *saved_exception_state){
 /* Syscall WriteTerminal: this service causes the requesting U-proc to be suspended until a line of output
 (string of characters) has been transmitted to the terminal device associated with the U-proc.*/
 void WriteTerminal(state_t *saved_exception_state){
-    char *a1 = &saved_exception_state->reg_a1;
+    char *a1 = (char *) &saved_exception_state->reg_a1;
     int *a2 = &saved_exception_state->reg_a2;
 
     // Check if the parameters a1 and a2 are "legal"
-    checkError(*a2,*a1);
+    checkError(a2,a1);
 
     // Save off the length of the string
     int i = *a2;
@@ -178,11 +178,11 @@ void WriteTerminal(state_t *saved_exception_state){
 /* Syscall ReadTerminal: this service causes the requesting U-proc to be suspended until a line of input (string
 of characters) has been transmitted from the terminal device associated with the U-proc.*/
 void ReadTerminal(state_t *saved_exception_state){
-    char *a1 = &saved_exception_state->reg_a1;
+    char *a1 = (char *) &saved_exception_state->reg_a1;
     int *a2 = &saved_exception_state->reg_a2;
 
     // Check if the parameters a1 and a2 are "legal"
-    checkError(*a2,*a1);
+    checkError(a2,a1);
 
     // Save off the length of the string
     int i = *a2;
@@ -233,17 +233,17 @@ void SYSCALL_EXCEPTION_HANDLER_SUPPORT(state_t *saved_exception_state){
     unsigned int *a0 = &saved_exception_state->reg_a0;
     switch(*a0){
         case TERMINATE:
-            Terminate(*a0);
+            Terminate(saved_exception_state);
             break;
         case WRITEPRINTER:
-            WritePrinter(*a0);
+            WritePrinter(saved_exception_state);
             break;
         case WRITETERMINAL:
-            WriteTerminal(*a0);
+            WriteTerminal(saved_exception_state);
             break;
         // NOTA: mancava la costante READTERMINAL, aggiunta in const.h
         case READTERMINAL:
-            ReadTerminal(*a0);
+            ReadTerminal(saved_exception_state);
             break;
         default:
             PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT(saved_exception_state);

@@ -1,0 +1,68 @@
+[
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase1/pcb.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase1/pcb.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase1/pcb.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase1/pcb.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase1/asl.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase1/asl.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase1/asl.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase1/asl.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase2/initial.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase2/initial.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase2/initial.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase2/initial.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase2/exceptions.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase2/exceptions.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase2/exceptions.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase2/exceptions.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase2/interrupts.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase2/interrupts.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase2/interrupts.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase2/interrupts.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase2/scheduler.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase2/scheduler.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase2/scheduler.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase2/scheduler.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase3/initProc.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase3/initProc.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase3/initProc.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase3/initProc.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase3/sysSupport.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase3/sysSupport.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase3/sysSupport.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase3/sysSupport.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/phase3/vmSupport.c.o -c \"/home/sara/Documenti/Progetto Git/MultiPanOS/phase3/vmSupport.c\"",
+  "file": "/home/sara/Documenti/Progetto Git/MultiPanOS/phase3/vmSupport.c",
+  "output": "CMakeFiles/MultiPandOS.dir/phase3/vmSupport.c.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/usr/local/share/uriscv/crtso.S.o -c /usr/local/share/uriscv/crtso.S",
+  "file": "/usr/local/share/uriscv/crtso.S",
+  "output": "CMakeFiles/MultiPandOS.dir/usr/local/share/uriscv/crtso.S.o"
+},
+{
+  "directory": "/home/sara/Documenti/Progetto Git/MultiPanOS/build",
+  "command": "riscv64-unknown-elf-gcc   -g -ffreestanding -static -nostartfiles -nostdlib -I/usr/include -ggdb -Wall -O0 -std=gnu99 -march=rv32imafd -mabi=ilp32d -o CMakeFiles/MultiPandOS.dir/usr/local/share/uriscv/liburiscv.S.o -c /usr/local/share/uriscv/liburiscv.S",
+  "file": "/usr/local/share/uriscv/liburiscv.S",
+  "output": "CMakeFiles/MultiPandOS.dir/usr/local/share/uriscv/liburiscv.S.o"
+}
+]

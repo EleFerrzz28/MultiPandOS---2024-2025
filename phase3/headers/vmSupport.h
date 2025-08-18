@@ -31,17 +31,11 @@ extern volatile unsigned int U_DEVICE_SEMAPHORES[4*UPROCMAX];
 extern pcb_t *swap_holder;
 
 dtpreg_t* getDevReg(int devType, int asid);
-
 void update_tlb(pteEntry_t page_table_entry);
-
 int get_victim_frame();
-
 void clean_page(pteEntry_t* page_table_entry);
-
 void rw_backing_store(int asid, int page_no, memaddr frame_addr, int rw);
-
 void uTLB_RefillHandler();
-
 void pager();
 
 #endif

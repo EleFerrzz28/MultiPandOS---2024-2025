@@ -126,7 +126,7 @@ handler – the Pager. The function below, pager(), handles three different TLB 
 • An attempted write to a read-only page: TLB-Modification exception – Mod*/
 void pager(){
     // Obtain the pointer to the Current Process’s Support Structure
-    support_t* curr_proc_sup_structure = SYSCALL(GETSUPPORTPTR, 0, 0, 0);
+    support_t* curr_proc_sup_structure = (support_t*) SYSCALL(GETSUPPORTPTR, 0, 0, 0);
     
     // Determine the cause of the TLB exception. The saved exception state responsible for this
     // TLB exception should be found in the Current Process’s Support Structure for TLB exceptions

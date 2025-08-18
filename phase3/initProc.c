@@ -1,5 +1,21 @@
 #include "headers/initProc.h"
 
+/*Swap Mutex Process*/ 
+unsigned int SWAP_POOL_SEMAPHORE; // when accessing the swap pool -> MUTEX
+
+/*Swap Pool Structure*/
+swap_t SWAP_POOL[POOLSIZE];
+
+/*Master Semaphore*/
+unsigned int MASTER_SEMAPHORE;
+
+/*Array of semaphores for the u-proc's devices*/
+volatile unsigned int U_DEVICE_SEMAPHORES[4*UPROCMAX];
+
+/* A pointer to the current holder of mutual exclusion* on the Swap Pool Semaphore */
+pcb_t *swap_holder;
+
+
 /* Function that initializes a U-proc's page table */
 void initPageTableEntry(pteEntry_t *entry, int asid, int i) {
   if (i < 31)
@@ -33,8 +49,8 @@ void initSupportStructures(support_t *supportStructure, int index){
     supportStructure->sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MPP_M;
     supportStructure->sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MPP_M;
     /* Set the two SP fields to utilize the two stack spaces allocated in the Support Structure*/
-    supportStructure->sup_exceptContext[PGFAULTEXCEPT].stackPtr = &(supportStructure->sup_stackTLB[499]);
-    supportStructure->sup_exceptContext[GENERALEXCEPT].stackPtr = &(supportStructure->sup_stackGen[499]);
+    supportStructure->sup_exceptContext[PGFAULTEXCEPT].stackPtr = (unsigned int) &(supportStructure->sup_stackTLB[499]);
+    supportStructure->sup_exceptContext[GENERALEXCEPT].stackPtr = (unsigned int) &(supportStructure->sup_stackGen[499]);
 }
 
 void InstantiatorProcess (){

@@ -1,4 +1,5 @@
 #include "headers/initial.h"
+#include "../phase3/initProc.c"
 
 /*Declare the Level 3 global variables*/
 
@@ -26,7 +27,7 @@ void initFirstProcess()
     first_process->p_s.mie = MIE_ALL;                              // enable interrupt
     first_process->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M; // enable interrupt and kernel mode
     RAMTOP(first_process->p_s.reg_sp);
-    first_process->p_s.pc_epc = (memaddr)test;
+    first_process->p_s.pc_epc = (memaddr)InstantiatorProcess;
 
     // there are no other processes, the first process has no parent
     first_process->p_parent = NULL;
