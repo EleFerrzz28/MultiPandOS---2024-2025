@@ -384,7 +384,9 @@ void SYSCALL_EXCEPTION_HANDLER(state_t *saved_exception_state)
     }
     else // ...if not in kernel mode:
     {
-        saved_exception_state->cause = PRIVINSTR;
+        if (*a0 < 0){
+            saved_exception_state->cause = PRIVINSTR;
+        }
         PROGRAM_TRAP_EXCEPTION_HANDLER(saved_exception_state);
     }
 }

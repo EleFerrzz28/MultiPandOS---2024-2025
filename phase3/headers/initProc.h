@@ -3,5 +3,5 @@
 
 #include "vmSupport.h"
 #include "sysSupport.h"
-
+extern void InstantiatorProcess ();
 #endif

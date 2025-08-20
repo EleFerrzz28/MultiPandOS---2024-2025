@@ -1,5 +1,5 @@
 #include "headers/initial.h"
-#include "../phase3/initProc.c"
+#include "../phase3/headers/initProc.h"
 
 /*Declare the Level 3 global variables*/
 
@@ -108,7 +108,7 @@ void main()
     }
 
     /*Load the system-wide Interval Timer with 100 milliseconds (constant PSECOND)*/
-    LDIT(PSECOND * *(cpu_t *)(TIMESCALEADDR));
+    LDIT(PSECOND * (*(cpu_t *)(TIMESCALEADDR)));
     /*Instantiate a single process, the first one*/
     initFirstProcess();
 

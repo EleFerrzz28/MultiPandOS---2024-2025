@@ -4,8 +4,8 @@
 #include <uriscv/cpu.h>
 #include <uriscv/liburiscv.h>
 #include <uriscv/types.h>
-#include <stddef.h>
-#include <stdint.h>
+//#include <stddef.h>
+//#include <stdint.h>
 #include "../../headers/const.h"
 #include "../../headers/types.h"
 #include "../../phase2/headers/exceptions.h"
@@ -13,7 +13,7 @@
 /* The recommended location in MultiPandOS is to place the Swap Pool after the end of the operating
 system code and processors kernel stacks. Though the size of one’s operating system code is unknown2 ,
 simply overestimate its size.*/
-#define SWAP_POOL_START RAMSTART + (64 * PAGESIZE) + (NCPU * PAGESIZE);
+#define SWAP_POOL_START RAMSTART + (64 * PAGESIZE) + (NCPU * PAGESIZE)
 
 /*Swap Mutex Process*/
 extern unsigned int SWAP_POOL_SEMAPHORE; // when accessing the swap pool -> MUTEX

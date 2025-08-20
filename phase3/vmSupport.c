@@ -2,25 +2,35 @@
 #include "headers/sysSupport.h"
 
 /*Declaring the structures - module wide*/
-unsigned int SWAP_POOL_SEMAPHORE;
-unsigned int MASTER_SEMAPHORE;
+/*Swap Mutex Process*/ 
+unsigned int SWAP_POOL_SEMAPHORE; // when accessing the swap pool -> MUTEX
+
+/*Swap Pool Structure*/
 swap_t SWAP_POOL[POOLSIZE];
+
+/*Master Semaphore*/
+unsigned int MASTER_SEMAPHORE;
+
+/*Array of semaphores for the u-proc's devices*/
 volatile unsigned int U_DEVICE_SEMAPHORES[4*UPROCMAX];
+
+/* A pointer to the current holder of mutual exclusion* on the Swap Pool Semaphore */
 pcb_t *swap_holder;
+
 
 dtpreg_t *getDevReg(int devType, int asid){
     dtpreg_t* dev_reg = START_DEVREG;
 
     switch(devType){
         case IL_FLASH:
-            dev_reg += (asid-1)*0x10;
+            dev_reg = &dev_reg[1*DEVPERINT + (asid-1)]; //1 - Flash, 3 - Printer, 4 - Terminal from interrupt lines - 3, so in the case of Flash Device Line 4 - 3.
             break;
         case IL_PRINTER:
-            dev_reg += (0x10 + (asid-1)*0x10);
-            break;
+            dev_reg = &dev_reg[3*DEVPERINT + (asid-1)];
+        break;
         case IL_TERMINAL:
-            dev_reg += (2*0x10 + (asid-1)*0x10);
-            break;
+            dev_reg = &dev_reg[4*DEVPERINT + (asid-1)];
+        break;
         default:
             PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT();
             break;
@@ -36,10 +46,15 @@ void update_tlb(pteEntry_t page_table_entry){
     setENTRYHI(page_table_entry.pte_entryHI);
     // Execute TLB-Probe
     TLBP();
-    if(getINDEX() != PRESENTFLAG){// Check if the page is cached in the TLB
+    if((getINDEX() & PRESENTFLAG) == 0){// Check if the page is cached in the TLB
         // if so, set the EntryLo register and execute TLBWI() instruction
         setENTRYLO(page_table_entry.pte_entryLO);
         TLBWI();
+    }
+    else{
+        // if not, set the EntryLo register and execute TLBWR() instruction
+        setENTRYLO(page_table_entry.pte_entryLO);
+        TLBWR();
     }
 }
 
@@ -60,7 +75,7 @@ int get_victim_frame(){
 /* Function that cleans the page associated to the page table entry given */
 void clean_page(pteEntry_t* page_table_entry){
     // Mark Page Table entry k as not valid
-    page_table_entry->pte_entryLO = ~VALIDON;
+    page_table_entry->pte_entryLO &= ~VALIDON;
     // Update TLB
     update_tlb(*page_table_entry);
 }
@@ -77,21 +92,14 @@ void rw_backing_store(int asid, int page_no, memaddr frame_addr, int rw){
     // block to be read (or written); the particular frame’s starting address.
     flash_device_reg->data0 = frame_addr;
    
-    // Write the correct command in the flash device's COMMAND field
-    if (rw == 1){
-        flash_device_reg->command = (block_number << 8) | FLASHWRITE;
-    } else {
-        flash_device_reg->command = (block_number << 8) | FLASHREAD;
-    }
     // Use the NSYS5 system call to write the flash device’s COMMAND field with the device block
     // number (high order three bytes) and the command to read (or write) in the lower order byte.
-    SYSCALL(DOIO, (int)flash_device_reg, (int)flash_device_reg->command, 0);
-
+    int doio_result = SYSCALL(DOIO, (memaddr)&flash_device_reg->command, (block_number << 8) | (rw ? FLASHWRITE : FLASHREAD), 0) & 0xFF;
     // Controlla esito
-    // if(flash_device_reg->status != 1){
+    if(doio_result != READY){
         // Program trap
-        // PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT();
-    // }
+         PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT();
+    }
 }
 
 /* TLB-refill event handler to which the control is passed after a logical address-translation's
@@ -105,6 +113,8 @@ void uTLB_RefillHandler(){
     // inspecting EntryHi in the saved exception state of the CPU
     state_t *saved_exception_state = GET_EXCEPTION_STATE_PTR(getPRID());
     int p = ENTRYHI_GET_VPN(saved_exception_state->entry_hi);
+    
+    if (p >= USERPGTBLSIZE) p = USERPGTBLSIZE - 1;
 
     // Get the Page Table entry for page number p for the Current Process
     pteEntry_t page_table_entry = CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p];
@@ -116,7 +126,7 @@ void uTLB_RefillHandler(){
 
     // Return control to the Current Process to retry the instruction that caused the TLB-Refill event
     // riguardare: saved_exception_state->pc_epc += WORDLEN;
-    LDST(&saved_exception_state);
+    LDST(saved_exception_state);
 }
 
 /* Function that handles page faults that are passed up by the Nucleus to the Support Level’s TLB exception
@@ -130,11 +140,11 @@ void pager(){
     
     // Determine the cause of the TLB exception. The saved exception state responsible for this
     // TLB exception should be found in the Current Process’s Support Structure for TLB exceptions
-    state_t *saved_exception_state = &curr_proc_sup_structure->sup_exceptState[0];
+    state_t *saved_exception_state = &curr_proc_sup_structure->sup_exceptState[PGFAULTEXCEPT];
 
     unsigned int CAUSE = saved_exception_state->cause;
     if(CAUSE == EXC_MOD){// if the cause is a TLB-Modification exception...
-        PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT(saved_exception_state); // ...program trap
+        PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT(); // ...program trap
     }
 
     // Gain mutual exclusion over the Swap Pool table
@@ -144,25 +154,23 @@ void pager(){
 
     // Determine the missing page number (denoted as p)
     int p = ENTRYHI_GET_VPN(saved_exception_state->entry_hi);
-
+    if (p >= USERPGTBLSIZE) p = USERPGTBLSIZE - 1;
     // Get the Page Table entry for page number p for the Current Process in its support structure
     pteEntry_t page_table_entry = curr_proc_sup_structure->sup_privatePgTbl[p];
 
-    if(SWAP_POOL[p].sw_asid!=NOPROC){// Check if the page is loaded in the swap pool
+    if(page_table_entry.pte_entryLO & VALIDON){// Check if the page is loaded in the swap pool
         update_tlb(page_table_entry); // Update the TLB
-        if(page_table_entry.pte_entryLO & VALIDON){ // if the page is valid...
-            SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0); // ...release mutual exclusion
-            // There's now no process holding mutual exclusion on the Swap Pool Table
-            swap_holder = NULL;
-            LDST(&saved_exception_state); // and return control to the Current Process 
-        }
+        swap_holder = NULL;
+        // There's now no process holding mutual exclusion on the Swap Pool Table
+        SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0); // ...release mutual exclusion
+        LDST(saved_exception_state); // and return control to the Current Process 
     }
 
     // Pick a frame, i, from the Swap Pool.
     int i = get_victim_frame(); 
     // Compute the frame's address by using the SWAP_POOL_AREA offset and the areas
     // occupied by the other pages untile the i
-    memaddr victim_addr = (memaddr)SWAP_POOL_START + (i * PAGESIZE);
+    memaddr victim_addr = SWAP_POOL_START + i * PAGESIZE;
 
     // if frame i is curretly occupied...
     if (SWAP_POOL[i].sw_asid != NOPROC){
@@ -172,26 +180,23 @@ void pager(){
     }
 
     // Read the contents of the Current Process’s backing store/flash device logical page p into frame i 
-    rw_backing_store(CURRENT_PROC[getPRID()]->p_pid, p, victim_addr, 0); // 4th parameter set to 1 => read
+    rw_backing_store(curr_proc_sup_structure->sup_asid, p, victim_addr, 0); // 4th parameter set to 1 => read
 
     //Update the Swap Pool table’s entry i to reflect frame i’s new contents
-    SWAP_POOL[i].sw_asid = CURRENT_PROC[getPRID()]->p_pid;
-    SWAP_POOL[i].sw_pte = CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p].pte_entryHI;
+    SWAP_POOL[i].sw_asid = curr_proc_sup_structure->sup_asid;
+    SWAP_POOL[i].sw_pageNo = p;
+    SWAP_POOL[i].sw_pte = &curr_proc_sup_structure->sup_privatePgTbl[p];
     
     //Update the Current Process’s Page Table entry for page p to indicate it is now present (V bit)
-    CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p].pte_entryLO |= VALIDON;
-    //DA RIGUARDARE SOTTO
-    
-    // Update the Current Process’s Page Table entry for page p to indicate it is occupying frame i (PFN field).
-    CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p].pte_entryLO |= (victim_addr << ENTRYLO_PFN_BIT);
+    curr_proc_sup_structure->sup_privatePgTbl[p].pte_entryLO = victim_addr | VALIDON | DIRTYON;
 
     // Update the TLB
-    update_tlb(CURRENT_PROC[getPRID()]->p_supportStruct->sup_privatePgTbl[p]);
+    update_tlb(curr_proc_sup_structure->sup_privatePgTbl[p]);
 
     // Release mutual exclusion over the Swap Pool table
-    SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0);
-    // There's now no process holding mutual exclusion on the Swap Pool Table
     swap_holder = NULL;
+    // There's now no process holding mutual exclusion on the Swap Pool Table
+    SYSCALL(VERHOGEN, (int)&SWAP_POOL_SEMAPHORE, 0, 0);
     // Return control to the Current Process to retry the instruction that caused the page fault
-    LDST(&saved_exception_state);
+    LDST(saved_exception_state);
 }

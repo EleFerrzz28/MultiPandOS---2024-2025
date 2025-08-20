@@ -1,4 +1,0 @@
-/home/sara/Documenti/Progetto Git/MultiPanOS/build/CMakeFiles/MultiPandOS.dir
-/home/sara/Documenti/Progetto Git/MultiPanOS/build/CMakeFiles/MultiPandOSuRISCV.dir
-/home/sara/Documenti/Progetto Git/MultiPanOS/build/CMakeFiles/edit_cache.dir
-/home/sara/Documenti/Progetto Git/MultiPanOS/build/CMakeFiles/rebuild_cache.dir

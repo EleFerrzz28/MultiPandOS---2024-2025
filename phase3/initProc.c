@@ -1,27 +1,11 @@
 #include "headers/initProc.h"
 
-/*Swap Mutex Process*/ 
-unsigned int SWAP_POOL_SEMAPHORE; // when accessing the swap pool -> MUTEX
-
-/*Swap Pool Structure*/
-swap_t SWAP_POOL[POOLSIZE];
-
-/*Master Semaphore*/
-unsigned int MASTER_SEMAPHORE;
-
-/*Array of semaphores for the u-proc's devices*/
-volatile unsigned int U_DEVICE_SEMAPHORES[4*UPROCMAX];
-
-/* A pointer to the current holder of mutual exclusion* on the Swap Pool Semaphore */
-pcb_t *swap_holder;
-
-
 /* Function that initializes a U-proc's page table */
 void initPageTableEntry(pteEntry_t *entry, int asid, int i) {
   if (i < 31)
-    entry->pte_entryHI = KUSEG + (i << VPNSHIFT) + (asid << ASIDSHIFT);
+    entry->pte_entryHI = KUSEG | (i << VPNSHIFT) | (asid << ASIDSHIFT);
   else
-    entry->pte_entryHI = 0xBFFFF000 + (asid << ASIDSHIFT); // stack page
+    entry->pte_entryHI = 0xBFFFF000 | (i << VPNSHIFT) | (asid << ASIDSHIFT); // stack page
   entry->pte_entryLO = DIRTYON;
 }
 
@@ -43,11 +27,11 @@ void initSupportStructures(support_t *supportStructure, int index){
     /* Set the two PC fields. One of them (0 - PGFAULTEXCEPT) should be set to the address of the
     Support Level’s TLB handler, while the other one (1 - GENERALEXCEPT) should be set to the
     address of the Support Level’s general exception handler.*/
-    supportStructure->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr )uTLB_RefillHandler;
+    supportStructure->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr )pager;
     supportStructure->sup_exceptContext[GENERALEXCEPT].pc = (memaddr )support_exception_handler;
     /* Set the two Status registers to kernel-mode.*/
-    supportStructure->sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MPP_M;
-    supportStructure->sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MPP_M;
+    supportStructure->sup_exceptContext[PGFAULTEXCEPT].status = MSTATUS_MPP_M;
+    supportStructure->sup_exceptContext[GENERALEXCEPT].status = MSTATUS_MPP_M;
     /* Set the two SP fields to utilize the two stack spaces allocated in the Support Structure*/
     supportStructure->sup_exceptContext[PGFAULTEXCEPT].stackPtr = (unsigned int) &(supportStructure->sup_stackTLB[499]);
     supportStructure->sup_exceptContext[GENERALEXCEPT].stackPtr = (unsigned int) &(supportStructure->sup_stackGen[499]);
@@ -65,7 +49,7 @@ void InstantiatorProcess (){
     // Initialize masterSemaphore
     MASTER_SEMAPHORE = 0;
 
-    for(int i = 0; i < 3*UPROCMAX; i++){
+    for(int i = 0; i < 4*UPROCMAX; i++){
         U_DEVICE_SEMAPHORES[i] = 1;
     }
 
@@ -80,13 +64,13 @@ void InstantiatorProcess (){
     support_t supportStructures[UPROCMAX];
 
     for(int i = 1; i <= UPROCMAX; i++){
-        initProcessState(&UprocState[i], i);
-        initSupportStructures(&supportStructures[i], i);
+        initProcessState(&UprocState[i-1], i);
+        initSupportStructures(&supportStructures[i-1], i);
         for(int j = 0; j < USERPGTBLSIZE; j++){
-            initPageTableEntry(supportStructures[i].sup_privatePgTbl, i, j);
+            initPageTableEntry(&supportStructures[i-1].sup_privatePgTbl[j], i, j);
         }
         /*  Initialize and launch (NSYS1) between 1 and 8 U-procs. */
-        SYSCALL(CREATEPROCESS, (int)&UprocState[i], PROCESS_PRIO_LOW, (int)&supportStructures[i]);
+        SYSCALL(CREATEPROCESS, (int)&UprocState[i-1], PROCESS_PRIO_LOW, (int)&supportStructures[i-1]);
     }
 
     for(int i = 0; i < UPROCMAX; i++){

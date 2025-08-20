@@ -20,7 +20,7 @@ void scheduler()
     if (current_process != NULL)
     {
         //Load 5 milliseconds on the PLT
-        setTIMER(TIMESLICE * *(cpu_t *)(TIMESCALEADDR));
+        setTIMER(TIMESLICE * (*(cpu_t *)(TIMESCALEADDR)));
 
         // TIME HANDLING:
         cpu_t current_time; 
@@ -60,6 +60,7 @@ void scheduler()
             (This register holds the priority of tasks running on each processor:
             There are only two possible priorities, 0 and 1, 
             representing the highest and lowest priorities respectively) */
+            RELEASE_LOCK(GLOBAL_LOCK);
             *((memaddr *)TPR) = 1;
             /*set the mie register t*/
             setMIE(MIE_ALL & ~MIE_MTIE_MASK);
@@ -67,7 +68,6 @@ void scheduler()
             status |= MSTATUS_MIE_MASK;
             setSTATUS(status);
 
-            RELEASE_LOCK(GLOBAL_LOCK);
             /*Wait state: the processor is not executing instructions, 
             but it is waiting for a device interrupt to occur*/
             WAIT();

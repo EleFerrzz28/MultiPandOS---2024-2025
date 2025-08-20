@@ -4,11 +4,11 @@
 #include <uriscv/cpu.h>
 #include <uriscv/liburiscv.h>
 #include <uriscv/types.h>
-#include <stddef.h>
+//#include <stddef.h>
 #include "vmSupport.h"
 
 void support_exception_handler();
 void PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT();
-void SYSCALL_EXCEPTION_HANDLER_SUPPORT(state_t *saved_exception_state);
+void SYSCALL_EXCEPTION_HANDLER_SUPPORT(support_t *process_support_struct);
 
 #endif
