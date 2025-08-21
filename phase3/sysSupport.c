@@ -103,7 +103,7 @@ void WritePrinter(support_t *process_support_struct){
     while(i > 0){
         // Write the address of the character to be printed in data0
         dev_reg_address->data0 = *a1;
-        // Execute DOIO to activte the command
+        // Execute DOIO to activate the command
         doio_result = SYSCALL(DOIO, (memaddr)&dev_reg_address->command, PRINTCHR, 0) & 0xFF;
         if (doio_result != READY) break; // if the status is not "Device Ready", break
         // Eventually, go to the next character...
@@ -251,7 +251,6 @@ void SYSCALL_EXCEPTION_HANDLER_SUPPORT(support_t *process_support_struct){
 /* General exception handler: The Support Level general exception handler will process all passed up non-TLB exceptions:
 • All SYSCALL (SYSCALL) exceptions numbered 1 and above (positive number).
 • All Program Trap exceptions namely all exception causes except of those for SYSCALL excep-tions and those related to TLB exceptions.*/
-int causes;
 void support_exception_handler(){
     // The processor state at the time of the exception will be in the Support Structure’s corresponding sup_exceptState field
     support_t *process_support_struct = (support_t *)SYSCALL(GETSUPPORTPTR, 0, 0, 0);
@@ -260,7 +259,6 @@ void support_exception_handler(){
     // will pass control to either the Support Level’s SYSCALL exception handler or to the
     // Support's Level's Program Trap exception handler
     int CAUSE = saved_exception_state->cause;
-    causes = CAUSE;
     if(CAUSE != SYSEXCEPTION){        
         PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT();
     } else {

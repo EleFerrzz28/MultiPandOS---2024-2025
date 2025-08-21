@@ -2,10 +2,10 @@
 
 /* Function that initializes a U-proc's page table */
 void initPageTableEntry(pteEntry_t *entry, int asid, int i) {
-  if (i < 31)
+  if (i < 31)/*Each U-proc executes in the kuseg address space*/
     entry->pte_entryHI = KUSEG | (i << VPNSHIFT) | (asid << ASIDSHIFT);
-  else
-    entry->pte_entryHI = 0xBFFFF000 | (i << VPNSHIFT) | (asid << ASIDSHIFT); // stack page
+  else /*The stack page is limited to one page and is set to the halfway point in kuseg.*/
+    entry->pte_entryHI = 0xBFFFF000 | (i << VPNSHIFT) | (asid << ASIDSHIFT);
   entry->pte_entryLO = DIRTYON;
 }
 
