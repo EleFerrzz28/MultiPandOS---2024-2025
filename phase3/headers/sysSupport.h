@@ -4,7 +4,6 @@
 #include <uriscv/cpu.h>
 #include <uriscv/liburiscv.h>
 #include <uriscv/types.h>
-//#include <stddef.h>
 #include "vmSupport.h"
 
 void support_exception_handler();

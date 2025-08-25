@@ -86,7 +86,7 @@ indicates wether the page to distinguish reading or writing operations*/
 void rw_backing_store(int asid, int page_no, memaddr frame_addr, int rw){
     // Find ASID's Flash Device
     dtpreg_t *flash_device_reg = getDevReg(IL_FLASH, asid);
-    // Compute the block number --> possiamo omettere questa istruzione??
+    // Compute the block number
     int block_number = page_no;
     // Write the flash device’s DATA0 field with the appropriate starting physical address of the 4k
     // block to be read (or written); the particular frame’s starting address.
@@ -95,7 +95,7 @@ void rw_backing_store(int asid, int page_no, memaddr frame_addr, int rw){
     // Use the NSYS5 system call to write the flash device’s COMMAND field with the device block
     // number (high order three bytes) and the command to read (or write) in the lower order byte.
     int doio_result = SYSCALL(DOIO, (memaddr)&flash_device_reg->command, (block_number << 8) | (rw ? FLASHWRITE : FLASHREAD), 0) & 0xFF;
-    // Controlla esito
+    // Check results
     if(doio_result != READY){
         // Program trap
          PROGRAM_TRAP_EXCEPTION_HANDLER_SUPPORT();
@@ -125,7 +125,6 @@ void uTLB_RefillHandler(){
     TLBWR();
 
     // Return control to the Current Process to retry the instruction that caused the TLB-Refill event
-    // riguardare: saved_exception_state->pc_epc += WORDLEN;
     LDST(saved_exception_state);
 }
 
@@ -180,7 +179,7 @@ void pager(){
     }
 
     // Read the contents of the Current Process’s backing store/flash device logical page p into frame i 
-    rw_backing_store(curr_proc_sup_structure->sup_asid, p, victim_addr, 0); // 4th parameter set to 1 => read
+    rw_backing_store(curr_proc_sup_structure->sup_asid, p, victim_addr, 0); // 4th parameter set to 0 => read
 
     //Update the Swap Pool table’s entry i to reflect frame i’s new contents
     SWAP_POOL[i].sw_asid = curr_proc_sup_structure->sup_asid;

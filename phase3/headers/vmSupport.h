@@ -4,8 +4,6 @@
 #include <uriscv/cpu.h>
 #include <uriscv/liburiscv.h>
 #include <uriscv/types.h>
-//#include <stddef.h>
-//#include <stdint.h>
 #include "../../headers/const.h"
 #include "../../headers/types.h"
 #include "../../phase2/headers/exceptions.h"

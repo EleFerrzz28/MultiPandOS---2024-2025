@@ -17,7 +17,7 @@ void initProcessState(state_t *processState, int index){
     processState->mie = MIE_ALL;
     processState->status = MSTATUS_MPIE_MASK | MSTATUS_MPP_U;
     //  EntryHi.ASID set to the process’s unique ID; an integer from [1..8]:
-    processState->entry_hi = index << ASIDSHIFT; // lo sposti dove l'hardware si aspetta di trovarlo
+    processState->entry_hi = index << ASIDSHIFT; // moved to where the hw expects to find it
 }
 
 /* Function that initializes a Support Structure for a U-proc */
